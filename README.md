@@ -15,6 +15,8 @@ Storage | 256 GB
 Battery | Li-Po 8800 mAh, non-removable
 Display | 11.5-inch,2000х1200 FHD+ 2.4K Resolution; Dynamic 120Hz Refresh Rate
 Camera  | 50.1 MP (Samsung® ISOCELL JN1) and 13 MP (Samsung® ISOCELL 3L6)
+Demensions | 268.7x169x7.6 mm
+Weight  | 528g
 
 ### Device picture
 [Screenshot_20250206-190111](https://github.com/user-attachments/assets/d982ed91-e9f5-4574-afae-c6216ae4349d)

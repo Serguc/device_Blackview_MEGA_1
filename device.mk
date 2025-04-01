@@ -63,7 +63,7 @@ AB_OTA_POSTINSTALL_CONFIG += \
     POSTINSTALL_OPTIONAL_system=true
 
 # VNDK
-PRODUCT_TARGET_VNDK_VERSION := 31
+PRODUCT_TARGET_VNDK_VERSION := 32
 
 # API
 PRODUCT_SHIPPING_API_LEVEL := 31
@@ -108,11 +108,13 @@ RECOVERY_BINARY_SOURCE_FILES += $(TARGET_OUT_EXECUTABLES)/hw/android.system.susp
 
 # Keymaster
 PRODUCT_PACKAGES += \
+    android.hardware.keymaster@4.0.service \
     android.hardware.keymaster@4.0.vendor \
     android.hardware.keymaster@4.1 \
 
 # Keymint
 PRODUCT_PACKAGES += \
+    android.hardware.security.keymint-service.trustkernel \
     android.hardware.security.keymint \
     android.hardware.security.secureclock \
     android.hardware.security.sharedsecret \
@@ -124,10 +126,12 @@ RECOVERY_LIBRARY_SOURCE_FILES += $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/libcppcos
 
 # Keystore2
 PRODUCT_PACKAGES += \
+    android.system.keystore2-service \
     android.system.keystore2 \
 
 # Gatekeeper
 PRODUCT_PACKAGES += \
+    android.hardware.gatekeeper-service.trustkernel.vendor \
     android.hardware.gatekeeper@1.0.vendor \
     android.hardware.gatekeeper@1.0-impl \
     android.hardware.gatekeeper@1.0-service \

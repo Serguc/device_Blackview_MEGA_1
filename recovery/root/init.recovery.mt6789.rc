@@ -22,10 +22,10 @@ on fs
     mkdir /mnt/vendor/nvcfg     0771 system system
     mount ext4 /dev/block/by-name/protect1 /mnt/vendor/protect_f rw wait
     mount ext4 /dev/block/by-name/protect2 /mnt/vendor/protect_s rw wait
-    #mount ext4 /dev/block/by-name/persist  /mnt/vendor/persist   rw wait
+    mount ext4 /dev/block/by-name/persist  /mnt/vendor/persist   rw wait
     mount ext4 /dev/block/by-name/nvdata   /mnt/vendor/nvdata    rw wait
     mount ext4 /dev/block/by-name/nvcfg    /mnt/vendor/nvcfg     rw wait
-    #mkdir /mnt/vendor/persist/t6_twrp    0755 system system
+    mkdir /mnt/vendor/persist/t6_twrp    0755 system system
     mkdir /mnt/vendor/protect_f/tee_twrp 0755 system system
     exec u:r:recovery:s0 system -- /vendor/bin/init_trustkernel_twrp.sh
 
@@ -41,24 +41,24 @@ on fs
 #    start vold
 
 on post-fs
-    #chown system system /mnt/vendor/protect_f
-    #chmod 0770 /mnt/vendor/protect_f
+    chown system system /mnt/vendor/protect_f
+    chmod 0770 /mnt/vendor/protect_f
 
-    #chown system system /mnt/vendor/protect_s
-    #chmod 0770 /mnt/vendor/protect_s
+    chown system system /mnt/vendor/protect_s
+    chmod 0770 /mnt/vendor/protect_s
 
-    #chown system system /mnt/vendor/nvcfg
-    #chmod 0771 /mnt/vendor/nvcfg
-    #restorecon_recursive /mnt/vendor/nvcfg
+    chown system system /mnt/vendor/nvcfg
+    chmod 0771 /mnt/vendor/nvcfg
+    restorecon_recursive /mnt/vendor/nvcfg
 
-    #chown root system /mnt/vendor/nvdata
-    #chmod 0771 /mnt/vendor/nvdata
-    #mkdir /mnt/vendor/nvdata/media 0771 media audio
-    #restorecon_recursive /mnt/vendor/nvdata
+    chown root system /mnt/vendor/nvdata
+    chmod 0771 /mnt/vendor/nvdata
+    mkdir /mnt/vendor/nvdata/media 0771 media audio
+    restorecon_recursive /mnt/vendor/nvdata
 
-    #chown system system /proc/bootprof
+    chown system system /proc/bootprof
     
-    #start boot-hal-1-2
+    start boot-hal-1-2
 
     # Support A/B feature for EMMC and UFS boot region
     symlink /dev/block/sda /dev/block/mmcblk0boot0
@@ -134,15 +134,8 @@ service vendor.keymint-trustkernel /vendor/bin/hw/android.hardware.security.keym
     disabled
     seclabel u:r:recovery:s0
 
-#service keystore2 /system/bin/keystore2 /data/misc/keystore
-#    #class early_hal
-#    user root
-#    group root readproc
-#    #task_profiles ProcessCapacityHigh
-#    seclabel u:r:recovery:s0
-
 #on property:ro.crypto.state=encrypted && property:ro.crypto.type=file
-#    install_keyring
+   install_keyring
 
 on property:crypto.ready=1
     start vendor.keymint

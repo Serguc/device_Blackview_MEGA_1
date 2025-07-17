@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 DEVICE_PATH := device/Blackview/MEGA_1
 
 # For building with minimal manifest
@@ -51,7 +50,7 @@ TARGET_NO_BOOTLOADER := true
 TARGET_USES_UEFI := true
 
 # Platform
-TARGET_BOARD_PLATFORM := common
+TARGET_BOARD_PLATFORM := mt6789
 
 # Kernel
 TARGET_KERNEL_ARCH := arm64

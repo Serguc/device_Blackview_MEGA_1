@@ -1,0 +1,9 @@
+service vendor.gatekeeper-trustkernel /vendor/bin/hw/android.hardware.gatekeeper-service.trustkernel.rc
+   class hal
+    #interface android.hardware.gatekeeper@1.0::IGatekeeper default
+    interface aidl android.hardware.gatekeeper.IGatekeeper/default
+    #user root
+    user system
+    group system
+    disabled
+    seclabel u:r:recovery:s0

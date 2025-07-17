@@ -1,4 +1,5 @@
 import /init.recovery.trustkernel.rc
+import /vendor/etc/init/android.hardware.keymaster@4.1-service.trustkernel.rc
 
 on init
     setprop sys.usb.configfs 1
@@ -6,8 +7,15 @@ on init
     setprop sys.usb.ffs.aio_compat 1
     export LD_LIBRARY_PATH /system/lib64:/vendor/lib64:/vendor/lib64/hw:/system/lib64/hw
 
+    mount cgroup none /acct cpuacct
+    mkdir /acct/uid
+    mkdir /sdcard
+
+# We need vold early for metadata encryption
+on early-fs
+    start vold
+
 on fs
-    install_keyring
     wait /dev/block/platform/soc/112b0000.ufshci
     symlink /dev/block/platform/soc/112b0000.ufshci /dev/block/bootdevice
 
@@ -15,10 +23,12 @@ on fs
     chmod +x /vendor/bin/hw/*
     # */
 
-    mkdir /mnt/vendor 0755 system system
+    mount_all /first_stage_ramdisk/fstab.mt6789 --late
+
+    mkdir /mnt/vendor           0755 system system
     mkdir /mnt/vendor/protect_f 0770 system system
     mkdir /mnt/vendor/protect_s 0770 system system
-    #mkdir /mnt/vendor/persist   0755 system system
+    mkdir /mnt/vendor/persist   0755 system system
     mkdir /mnt/vendor/nvdata    0771 system system
     mkdir /mnt/vendor/nvcfg     0771 system system
     mount ext4 /dev/block/by-name/protect1 /mnt/vendor/protect_f rw wait
@@ -30,46 +40,37 @@ on fs
     mkdir /mnt/vendor/protect_f/tee_twrp 0755 system system
     exec u:r:recovery:s0 system -- /vendor/bin/init_trustkernel_twrp.sh
 
-    #mkdir /data/misc 01771 system misc encryption=Require
-    #mkdir /data/misc
-    #mkdir /data/misc/keystore 0700 keystore keystore
-    
+# For vibrator
+    write /sys/class/leds/vibrator/trigger "transient"
+    chown system system /sys/class/leds/vibrator/trigger
+    chown system system /sys/class/leds/vibrator/activate
+    chown system system /sys/class/leds/vibrator/brightness
+    chown system system /sys/class/leds/vibrator/duration
+    chown system system /sys/class/leds/vibrator/state
+
+#flashlight
+    chown system system /sys/class/leds/flashlight/trigger
+    chown system system /sys/class/leds/flashlight/brightness
+    chown system system /sys/class/leds/flashlight/max_brightness
+
+    chown system system /sys/class/leds/torch-light0/trigger
+    chown system system /sys/class/leds/torch-light0/brightness
+    chown system system /sys/class/leds/torch-light0/max_brightness
+
+on early-fs
+    # Once metadata has been mounted, we'll need vold to deal with userdata checkpointing
+    start vold
+
+on fs
+    write /proc/bootprof "INIT:fs"
     install_keyring
-    setprop crypto.ready 1 
-
-# We need vold early for metadata encryption
-#on early-fs
-#    start vold
 
 on post-fs
-    chown system system /mnt/vendor/protect_f
-    chmod 0770 /mnt/vendor/protect_f
-
-    chown system system /mnt/vendor/protect_s
-    chmod 0770 /mnt/vendor/protect_s
-
-    chown system system /mnt/vendor/nvcfg
-    chmod 0771 /mnt/vendor/nvcfg
-    restorecon_recursive /mnt/vendor/nvcfg
-
-    chown root system /mnt/vendor/nvdata
-    chmod 0771 /mnt/vendor/nvdata
-    mkdir /mnt/vendor/nvdata/media 0771 media audio
-    restorecon_recursive /mnt/vendor/nvdata
-
-    chown system system /proc/bootprof
-
-on post-fs
-    start boot-hal-1-2
-
-on post-fs
-    start boot-hal-1-2
-
-   on boot
+    start boot-mtk
     exec u:r:update_engine:s0 root root -- /system/bin/mtk_plpath_utils
     start mtk.plpath.utils.link
 
-on property:persist.vendor.mtk.pl_lnk=1
+    on property:persist.vendor.mtk.pl_lnk=1
     symlink /dev/block/mapper/pl_a /dev/block/by-name/preloader_raw_a
     symlink /dev/block/mapper/pl_b /dev/block/by-name/preloader_raw_b
     symlink /dev/block/mapper/pl_a /dev/block/platform/bootdevice/by-name/preloader_raw_a
@@ -105,20 +106,6 @@ service mtk.plpath.utils.link /system/bin/mtk_plpath_utils
     disabled
     oneshot
     seclabel u:r:recovery:s0
-    
-on post-fs-data
-    mkdir /data/vendor_de 0770 system system
-    mkdir /data/vendor_de/0 0770 system system
-    mkdir /data/vendor/hardware 0771 root root
-
-    start health-hal-2-1
-    setprop sys.usb.config adb
-
-on boot
-    exec u:r:update_engine:s0 root root -- /system/bin/mtk_plpath_utils
-    start mtk.plpath.utils.link
-    start health-hal-2-1
-    start system_suspend
 
 service system_suspend /system/bin/hw/android.system.suspend-service
     class early_hal
@@ -129,50 +116,92 @@ service system_suspend /system/bin/hw/android.system.suspend-service
     disabled
     seclabel u:r:recovery:s0
 
-service vendor.gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
-    interface android.hardware.gatekeeper@1.0::IGatekeeper default
+service vendor.gatekeeper /vendor/bin/hw/android.hardware.gatekeeper-service.trustkernel
+    class hal
+    interface aidl android.hardware.gatekeeper.IGatekeeper/default
+    user system
+    group system
+    disabled
+    seclabel u:r:recovery:s0
+
+service vendor.keymint-trustkernel /vendor/bin/hw/android.hardware.security.keymint@3.0-service.trustkernel
+    class early_hal
+    interface aidl android.hardware.security.keymint.IKeyMintDevice/default
+    interface aidl android.hardware.security.keymint.IRemotelyProvisionedComponent/default
+    interface aidl android.hardware.security.sharedsecret.ISharedSecret/default
+    interface aidl android.hardware.security.secureclock.ISecureClock/default
+    user system
+    group system drmrpc
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
+
+service vendor.vibrator-default /vendor/bin/hw/android.hardware.vibrator-service.mediatek
     class hal
     user root
-    group root
-    disabled
+    group root system
     seclabel u:r:recovery:s0
 
-service vendor.keymint-trustkernel /vendor/bin/hw/android.hardware.security.keymint-service.trustkernel
-    class early_hal
-    user root
-    group root
-    disabled
-    seclabel u:r:recovery:s0
-
-#on property:ro.crypto.state=encrypted && property:ro.crypto.type=file
-   install_keyring
+on property:ro.crypto.state=encrypted && property:ro.crypto.type=file
+    write /proc/bootprof "crypto: install_keyring (crypto.ready=1)"
+    install_keyring
+    setprop crypto.ready 1
 
 on property:crypto.ready=1
-    start vendor.keymint
+    write /proc/bootprof "crypto: start vendor.keymint-trustkernel"
+    start vendor.keymint-trustkernel
 
-on property:vendor.sys.listener.registered=true
-    #start teed
-    start vendor.gatekeeper
-    start vendor.keymint
-   
 on property:hwservicemanager.ready=true
     #start teed
     start vendor.gatekeeper
-    start vendor.keymint
-
+    start vendor.keymint-trustkernel
+    
+on property:vendor.sys.listener.registered=true
+    #start teed
+    start vendor.gatekeeper
+    start vendor.keymint-trustkernel
+   
 on property:ro.crypto.state=unsupported
     stop teed
     stop vendor.gatekeeper
-    stop vendor.keymint
+    stop vendor.keymint-trustkernel
 
 on property:ro.crypto.state=unencrypted
     stop teed
     stop vendor.gatekeeper
-    stop vendor.keymint
-
-#on property:twrp.all.users.decrypted=true && property:twrp.decrypt.done=true
-on property:twrp.decrypt.done=true
-    #setprop crypto.ready 0
+    stop vendor.keymint-trustkernel
+    
+on property:twrp.all.users.decrypted=true
     stop teed
     stop vendor.gatekeeper
-    stop vendor.keymint
+    stop vendor.keymint-trustkernel
+
+on property:crypto.ready=0
+    stop teed
+    stop vendor.gatekeeper
+    stop vendor.keymint-trustkernel
+
+service mountfix /sbin/sh /system/bin/mount.sh
+    user root
+    group root
+    oneshot
+    disabled
+    seclabel u:r:recovery:s0
+
+on property:sys.usb.ffs.ready=1
+    start mountfix
+
+on boot
+    start health-hal-2-1
+    start vendor.vibrator-default
+    setprop sys.usb.config adb
+
+service modules_mount /system/bin/modules_mount.sh
+    user root
+    group root
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
+
+on property:twrp.decrypt.done=true
+    start modules_mount

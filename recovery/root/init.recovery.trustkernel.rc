@@ -1,4 +1,3 @@
-
 on post-fs
     write /proc/bootprof "tkcore: prepare system ta path"
 

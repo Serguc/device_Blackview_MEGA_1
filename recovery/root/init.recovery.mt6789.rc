@@ -1,5 +1,4 @@
 import /init.recovery.trustkernel.rc
-import /vendor/etc/init/android.hardware.keymaster@4.1-service.trustkernel.rc
 
 on init
     setprop sys.usb.configfs 1
@@ -56,6 +55,22 @@ on fs
     chown system system /sys/class/leds/torch-light0/trigger
     chown system system /sys/class/leds/torch-light0/brightness
     chown system system /sys/class/leds/torch-light0/max_brightness
+
+on post-fs-data
+    # Touch Panel
+    # chmod 0664 /dev/touch
+    chown root diag /sys/module/tpd_setting/parameters/tpd_calmat
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_debounce_time
+    chown root diag /sys/module/tpd_setting/parameters/tpd_mode
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_debounce_time0
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_debounce_time1
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_spl_num
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_pressure_threshold
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_auto_time_interval
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_sample_cnt
+    chown root diag /sys/module/tpd_setting/parameters/tpd_em_asamp
+    chown root diag /sys/module/tpd_debug/parameters/tpd_em_log
+    chown root diag /sys/module/tpd_debug/parameters/tpd_em_log_to_fs
 
 on early-fs
     # Once metadata has been mounted, we'll need vold to deal with userdata checkpointing

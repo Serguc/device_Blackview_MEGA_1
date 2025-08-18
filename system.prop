@@ -17,3 +17,11 @@ ro.hardware.kmsetkey=trustkernel
 
 # Gatekeeper
 ro.hardware.gatekeeper=trustkernel
+
+# Keymaster
+keymaster_ver=4.1
+
+# Misc
+ro.vendor.mediatek.platform=MT6789
+ro.vendor.mtk_f2fs_enable=0
+ro.vendor.mtk_emmc_support=1

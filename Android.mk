@@ -5,10 +5,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-ifneq ($(filter MEGA_1_NEU MEGA_1_TEE ,$(TARGET_DEVICE)),)
-
-LOCAL_PATH := device/Blackview/MEGA_1
-
-include $(call all-makefiles-under,$(LOCAL_PATH))
-
-endif
+soong_namespace {
+    imports: ["hardware/mtk-caf/bootctrl"],
+}

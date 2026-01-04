@@ -16,6 +16,8 @@
 
 PRODUCT_MAKEFILES := $(LOCAL_DIR)/twrp_MEGA_1.mk
 
-
-COMMON_LUNCH_CHOICES := twrp_MEGA_1-eng
-
+COMMON_LUNCH_CHOICES := \
+    twrp_MEGA_1-user \
+    twrp_MEGA_1-userdebug \
+    twrp_MEGA_1-eng
+#

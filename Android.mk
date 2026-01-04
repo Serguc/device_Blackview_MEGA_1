@@ -5,6 +5,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-soong_namespace {
-    imports: ["hardware/mtk-caf/bootctrl"],
-}
+LOCAL_PATH := $(call my-dir)
+
+ifeq ($(TARGET_DEVICE),MEGA_1)
+include $(call all-subdir-makefiles,$(LOCAL_PATH))
+endif
